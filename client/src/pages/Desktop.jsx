@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Window from '../components/Window';
-import { Folder, FileText, Send, LogOut, BarChart2, Plus } from 'lucide-react';
+import { Folder, FileText, Send, LogOut, BarChart2, Plus, Moon } from 'lucide-react';
 import api from '../services/api';
 import DreamEditor from './DreamEditor';
 import DreamGraph from './DreamGraph';
@@ -75,6 +75,32 @@ const Desktop = () => {
             Loading dream files...
           </motion.span>
         </div>
+      ) : dreams.length === 0 ? (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{ 
+            position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
+            padding: '40px', borderRadius: '24px', width: '100%', maxWidth: '400px',
+            zIndex: 1
+          }}
+        >
+          <div style={{ padding: '20px', borderRadius: '50%', background: 'rgba(56, 189, 248, 0.05)', marginBottom: '20px' }}>
+            <Moon size={60} color="var(--accent-primary)" style={{ opacity: 0.8 }} />
+          </div>
+          <h2 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '10px' }}>No dreams recorded yet</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '25px', lineHeight: '1.5' }}>
+            Your dream journal is currently empty.<br />Click New Dream to log your first dream.
+          </p>
+          <button 
+            onClick={() => openWindow('new-dream', 'New Dream', 'new-dream')}
+            className="glass"
+            style={{ padding: '12px 30px', borderRadius: '12px', border: '1px solid var(--glass-border)', background: 'var(--accent-primary)', color: 'white', fontWeight: 600, cursor: 'pointer' }}
+          >
+            Record First Dream
+          </button>
+        </motion.div>
       ) : (
         <>
           <div className="desktop-icon" onClick={() => openWindow('new-dream', 'New Dream', 'new-dream')}>
