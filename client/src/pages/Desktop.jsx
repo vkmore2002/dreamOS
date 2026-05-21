@@ -25,12 +25,12 @@ const Desktop = () => {
     }
   };
 
-  const openWindow = (id, title, content) => {
+  const openWindow = (id, title, type, data = {}) => {
     if (windows.find(w => w.id === id)) {
       setActiveWindow(id);
       return;
     }
-    setWindows([...windows, { id, title, content }]);
+    setWindows([...windows, { id, title, type, data }]);
     setActiveWindow(id);
   };
 
@@ -38,21 +38,35 @@ const Desktop = () => {
     setWindows(windows.filter(w => w.id !== id));
   };
 
+  const renderWindowContent = (win) => {
+    switch (win.type) {
+      case 'editor':
+        const dream = dreams.find(d => d._id === win.id);
+        return <DreamEditor dream={dream} onSave={() => { fetchDreams(); closeWindow(win.id); }} />;
+      case 'new-dream':
+        return <DreamEditor onSave={() => { fetchDreams(); closeWindow('new-dream'); }} />;
+      case 'graph':
+        return <DreamGraph dreams={dreams} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="desktop">
       {/* Desktop Icons */}
-      <div className="desktop-icon" onClick={() => openWindow('new-dream', 'New Dream', <DreamEditor onSave={() => { fetchDreams(); closeWindow('new-dream'); }} />)}>
+      <div className="desktop-icon" onClick={() => openWindow('new-dream', 'New Dream', 'new-dream')}>
         <Plus size={40} color="var(--accent-primary)" />
         <span>New Dream</span>
       </div>
 
-      <div className="desktop-icon" onClick={() => openWindow('graph', 'Dream Insights', <DreamGraph dreams={dreams} />)}>
+      <div className="desktop-icon" onClick={() => openWindow('graph', 'Dream Insights', 'graph')}>
         <BarChart2 size={40} color="var(--accent-secondary)" />
         <span>Analytics</span>
       </div>
 
       {dreams.map(dream => (
-        <div key={dream._id} className="desktop-icon" onClick={() => openWindow(dream._id, dream.title, <DreamEditor dream={dream} onSave={() => { fetchDreams(); closeWindow(dream._id); }} />)}>
+        <div key={dream._id} className="desktop-icon" onClick={() => openWindow(dream._id, dream.title, 'editor')}>
           <FileText size={40} />
           <span>{dream.title}</span>
         </div>
@@ -69,16 +83,16 @@ const Desktop = () => {
           zIndex={activeWindow === win.id ? 100 : 10 + index}
           onClick={() => setActiveWindow(win.id)}
         >
-          {win.content}
+          {renderWindowContent(win)}
         </Window>
       ))}
 
       {/* Dock */}
       <div className="dock glass">
-        <div className="dock-icon" onClick={() => openWindow('new-dream', 'New Dream', <DreamEditor onSave={() => { fetchDreams(); closeWindow('new-dream'); }} />)}>
+        <div className="dock-icon" onClick={() => openWindow('new-dream', 'New Dream', 'new-dream')}>
           <Plus size={24} />
         </div>
-        <div className="dock-icon" onClick={() => openWindow('graph', 'Dream Insights', <DreamGraph dreams={dreams} />)}>
+        <div className="dock-icon" onClick={() => openWindow('graph', 'Dream Insights', 'graph')}>
           <BarChart2 size={24} />
         </div>
         <div style={{ flex: 1 }} />
