@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const { catchAsync, AppError } = require('../middleware/errorMiddleware');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -7,75 +8,52 @@ const signToken = (id) => {
   });
 };
 
-exports.signup = async (req, res) => {
-  try {
-    const newUser = await User.create({
-      username: req.body.username,
-      email: req.body.email,
-      password: req.body.password
-    });
+exports.signup = catchAsync(async (req, res, next) => {
+  const newUser = await User.create({
+    username: req.body.username,
+    email: req.body.email,
+    password: req.body.password
+  });
 
-    const token = signToken(newUser._id);
+  const token = signToken(newUser._id);
 
-    res.status(201).json({
-      status: 'success',
-      token,
-      data: {
-        user: {
-          id: newUser._id,
-          username: newUser.username,
-          email: newUser.email
-        }
+  res.status(201).json({
+    status: 'success',
+    token,
+    data: {
+      user: {
+        id: newUser._id,
+        username: newUser.username,
+        email: newUser.email
       }
-    });
-  } catch (err) {
-    res.status(400).json({
-      status: 'fail',
-      message: err.message
-    });
+    }
+  });
+});
+
+exports.login = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return next(new AppError('Please provide email and password', 400));
   }
-};
 
-exports.login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  const user = await User.findOne({ email }).select('+password');
 
-    // 1) Check if email and password exist
-    if (!email || !password) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Please provide email and password'
-      });
-    }
+  if (!user || !(await user.correctPassword(password, user.password))) {
+    return next(new AppError('Incorrect email or password', 401));
+  }
 
-    // 2) Check if user exists && password is correct
-    const user = await User.findOne({ email }).select('+password');
+  const token = signToken(user._id);
 
-    if (!user || !(await user.correctPassword(password, user.password))) {
-      return res.status(401).json({
-        status: 'fail',
-        message: 'Incorrect email or password'
-      });
-    }
-
-    // 3) If everything ok, send token to client
-    const token = signToken(user._id);
-
-    res.status(200).json({
-      status: 'success',
-      token,
-      data: {
-        user: {
-          id: user._id,
-          username: user.username,
-          email: user.email
-        }
+  res.status(200).json({
+    status: 'success',
+    token,
+    data: {
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email
       }
-    });
-  } catch (err) {
-    res.status(400).json({
-      status: 'fail',
-      message: err.message
-    });
-  }
-};
+    }
+  });
+});

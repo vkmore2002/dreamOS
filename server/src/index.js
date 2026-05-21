@@ -6,6 +6,8 @@ require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 const dreamRoutes = require('./routes/dreamRoutes');
 
+const { globalErrorHandler, AppError } = require('./middleware/errorMiddleware');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -24,6 +26,14 @@ app.use('/api/dreams', dreamRoutes);
 app.get('/', (req, res) => {
   res.send('DreamOS API is running (v2)...');
 });
+
+// Handle unhandled routes
+app.all('*', (req, res, next) => {
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+});
+
+// Global Error Handler
+app.use(globalErrorHandler);
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/dreamos';
