@@ -27,8 +27,8 @@ app.get('/', (req, res) => {
   res.send('DreamOS API is running (v2)...');
 });
 
-// Handle unhandled routes
-app.all('/*', (req, res, next) => {
+// Handle unhandled routes (404)
+app.use((req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
