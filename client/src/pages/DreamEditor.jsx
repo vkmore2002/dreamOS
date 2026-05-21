@@ -10,9 +10,11 @@ const DreamEditor = ({ dream, onSave }) => {
     tags: '',
     symbols: ''
   });
+  const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
       const data = {
         ...formData,
@@ -28,6 +30,8 @@ const DreamEditor = ({ dream, onSave }) => {
       onSave();
     } catch (err) {
       alert('Error saving dream');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -89,7 +93,9 @@ const DreamEditor = ({ dream, onSave }) => {
         </div>
       </div>
 
-      <button type="submit">Save Dream Record</button>
+      <button type="submit" disabled={saving}>
+        {saving ? 'Saving...' : 'Save Dream Record'}
+      </button>
     </form>
   );
 };

@@ -5,23 +5,28 @@ import { Folder, FileText, Send, LogOut, BarChart2, Plus } from 'lucide-react';
 import api from '../services/api';
 import DreamEditor from './DreamEditor';
 import DreamGraph from './DreamGraph';
+import { motion } from 'framer-motion';
 
 const Desktop = () => {
   const { user, logout } = useAuth();
   const [dreams, setDreams] = useState([]);
   const [windows, setWindows] = useState([]);
   const [activeWindow, setActiveWindow] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchDreams();
   }, []);
 
   const fetchDreams = async () => {
+    setLoading(true);
     try {
       const res = await api.get('/dreams');
       setDreams(res.data.data.dreams);
     } catch (err) {
       console.error('Failed to fetch dreams:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -55,22 +60,41 @@ const Desktop = () => {
   return (
     <div className="desktop">
       {/* Desktop Icons */}
-      <div className="desktop-icon" onClick={() => openWindow('new-dream', 'New Dream', 'new-dream')}>
-        <Plus size={40} color="var(--accent-primary)" />
-        <span>New Dream</span>
-      </div>
-
-      <div className="desktop-icon" onClick={() => openWindow('graph', 'Dream Insights', 'graph')}>
-        <BarChart2 size={40} color="var(--accent-secondary)" />
-        <span>Analytics</span>
-      </div>
-
-      {dreams.map(dream => (
-        <div key={dream._id} className="desktop-icon" onClick={() => openWindow(dream._id, dream.title, 'editor')}>
-          <FileText size={40} />
-          <span>{dream.title}</span>
+      {loading ? (
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+            style={{ width: '40px', height: '40px', border: '3px solid rgba(255,255,255,0.1)', borderTop: '3px solid var(--accent-primary)', borderRadius: '50%' }}
+          />
+          <motion.span
+            animate={{ opacity: [0.4, 1, 0.4] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+            style={{ color: 'var(--text-secondary)', fontSize: '14px', letterSpacing: '1px' }}
+          >
+            Loading dream files...
+          </motion.span>
         </div>
-      ))}
+      ) : (
+        <>
+          <div className="desktop-icon" onClick={() => openWindow('new-dream', 'New Dream', 'new-dream')}>
+            <Plus size={40} color="var(--accent-primary)" />
+            <span>New Dream</span>
+          </div>
+
+          <div className="desktop-icon" onClick={() => openWindow('graph', 'Dream Insights', 'graph')}>
+            <BarChart2 size={40} color="var(--accent-secondary)" />
+            <span>Analytics</span>
+          </div>
+
+          {dreams.map(dream => (
+            <div key={dream._id} className="desktop-icon" onClick={() => openWindow(dream._id, dream.title, 'editor')}>
+              <FileText size={40} />
+              <span>{dream.title}</span>
+            </div>
+          ))}
+        </>
+      )}
 
       {/* Windows */}
       {windows.map((win, index) => (
